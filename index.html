@@ -461,12 +461,17 @@
     }
 
     function calculateAndShowResult() {
-        const type = [
-            scores.E > scores.I ? 'E' : 'I',
-            scores.S > scores.N ? 'S' : 'N',
-            scores.T > scores.F ? 'T' : 'F',
-            scores.J > scores.P ? 'J' : 'P'
-        ].join('');
+        // --- 进阶版判定算法：拉高 E 和 J 的阈值 ---
+        // 正常是 4个就算胜出。现在我们将 E 和 J 的门槛提高到 5 个。
+        // 因为很多 I 人在社会化后会倾向选 E，很多 P 人会假装自己有计划(J)。
+        // 这样可以揪出那些“伪装者”，提高测试的毒辣度和准确性。
+        
+        let typeE_I = scores.E >= 5 ? 'E' : 'I';
+        let typeS_N = scores.S > scores.N ? 'S' : 'N';  // S和N保持原始的多数决
+        let typeT_F = scores.T > scores.F ? 'T' : 'F';  // T和F保持原始的多数决
+        let typeJ_P = scores.J >= 5 ? 'J' : 'P';        // J 的门槛也提高到 5
+
+        const type = [typeE_I, typeS_N, typeT_F, typeJ_P].join('');
 
         loadingView.classList.remove('active');
         resultView.classList.add('active');
