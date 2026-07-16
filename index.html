@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>探索真实的你 - MBTI性格测试</title>
+    <style>
+        :root {
+            --primary-color: #FF758C;
+            --secondary-color: #FF7EB3;
+            --text-main: #333333;
+            --text-light: #777777;
+            --bg-card: rgba(255, 255, 255, 0.95);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--bg-card);
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* 视图基础设置 */
+        .view {
+            display: none;
+            padding: 40px 30px;
+            animation: fadeIn 0.5s ease forwards;
+        }
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 欢迎页 */
+        .welcome-view {
+            text-align: center;
+        }
+        .welcome-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .welcome-view h1 {
+            font-size: 26px;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        .welcome-view p {
+            color: var(--text-light);
+            font-size: 15px;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            font-size: 13px !important;
+            color: #aaa !important;
+            margin-bottom: 40px !important;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        /* 按钮通用样式 */
+        .btn {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 16px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 8px 15px rgba(255, 117, 140, 0.3);
+            transition: transform 0.1s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        .btn:active {
+            transform: scale(0.96);
+            box-shadow: 0 4px 10px rgba(255, 117, 140, 0.2);
+        }
+
+        /* 测试页 */
+        .quiz-view {
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+        .question-meta {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 15px;
+        }
+        .question-text {
+            font-size: 20px;
+            font-weight: 600;
+            line-height: 1.5;
+            text-align: center;
+            margin-bottom: 40px;
+            flex-grow: 1;
+        }
+        .option-btn {
+            background: white;
+            border: 2px solid #f0f0f0;
+            color: var(--text-main);
+            border-radius: 16px;
+            padding: 18px 20px;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 15px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        .option-btn:hover, .option-btn:active {
+            border-color: var(--primary-color);
+            background: #fff5f7;
+            transform: translateY(-2px);
+        }
+
+        /* 结果页 */
+        .result-view {
+            text-align: center;
+        }
+        .result-type {
+            font-size: 50px;
+            font-weight: 900;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .result-name {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #555;
+        }
+        .result-content {
+            background: #f9f9f9;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: left;
+            margin-bottom: 30px;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #444;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+        .result-content h3 {
+            color: var(--primary-color);
+            margin-top: 15px;
+            margin-bottom: 8px;
+            font-size: 16px;
+            border-bottom: 2px solid #ffe4e8;
+            padding-bottom: 4px;
+            display: inline-block;
+        }
+        .result-content h3:first-child {
+            margin-top: 0;
+        }
+        
+        /* 正在分析加载页 */
+        .loading-view {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #ffe4e8;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 欢迎页 -->
+    <div id="welcomeView" class="view active welcome-view">
+        <div class="welcome-icon">✨</div>
+        <h1>探索真实的你</h1>
+        <p>专业 28 题精简版 MBTI 测试</p>
+        <p class="subtitle">小江开发</p>
+        <p style="font-size: 14px; margin-bottom: 30px; color: #888; text-align: left; padding: 0 10px;">
+            本测试通过28个精心设计的场景问题，精准测算出你在社交、认知、判断和生活方式上的核心倾向。请在放松的状态下，选择<strong>最符合你直觉的第一反应</strong>。
+        </p>
+        <button class="btn" onclick="startQuiz()">开始测试</button>
+    </div>
+
+    <!-- 测试页 -->
+    <div id="quizView" class="view quiz-view">
+        <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+        </div>
+        <div class="question-meta" id="questionMeta">进度: 1/28</div>
+        <div class="question-text" id="questionText">问题加载中...</div>
+        
+        <div id="optionsContainer">
+            <!-- 选项通过JS动态插入 -->
+        </div>
+    </div>
+
+    <!-- 加载页 -->
+    <div id="loadingView" class="view loading-view">
+        <div class="spinner"></div>
+        <h2 style="color: var(--primary-color);">正在生成你的专属性格报告...</h2>
+        <p style="color: var(--text-light); margin-top: 10px;">小江正在为你深入分析多维度数据</p>
+    </div>
+
+    <!-- 结果页 -->
+    <div id="resultView" class="view result-view">
+        <div class="result-type" id="resultType">INTJ</div>
+        <div class="result-name" id="resultName">建筑师</div>
+        
+        <div class="result-content" id="resultContent">
+            <!-- 结果内容通过JS动态插入 -->
+        </div>
+
+        <button class="btn" onclick="location.reload()">重新测试</button>
+    </div>
+</div>
+
+<script>
+    // --- 题库数据 (28题，保证四维各7题，标准MBTI逻辑) ---
+    const questions = [
+        // E (外向) / I (内向)
+        { q: "在参加社交聚会时，你通常会感到：", optA: {text: "充满能量，喜欢结识新朋友", val: "E"}, optB: {text: "消耗精力，需要随后独处来恢复", val: "I"} },
+        { q: "在工作中遇到复杂问题时，你倾向于：", optA: {text: "找同事一起讨论，在交流中理清思路", val: "E"}, optB: {text: "先自己安静地思考，想清楚再表达", val: "I"} },
+        { q: "你的朋友大多会怎么形容你？", optA: {text: "健谈、热情、容易亲近", val: "E"}, optB: {text: "安静、沉稳、了解后才发现很有趣", val: "I"} },
+        { q: "在新的环境中，你通常：", optA: {text: "主动打破僵局，主动去和别人搭话", val: "E"}, optB: {text: "先观察周围的情况，等别人来找我说话", val: "I"} },
+        { q: "周末你更理想的度过方式是：", optA: {text: "和一群朋友出门逛街、吃饭、参加活动", val: "E"}, optB: {text: "宅在家里看书、追剧或做自己的爱好", val: "I"} },
+        { q: "你的沟通风格倾向于：", optA: {text: "边想边说，语速较快", val: "E"}, optB: {text: "深思熟虑后才开口，比较谨慎", val: "I"} },
+        { q: "在会议上，你通常：", optA: {text: "经常发言，积极分享当下产生的想法", val: "E"}, optB: {text: "更多是倾听，只在确有必要时才发表意见", val: "I"} },
+
+        // S (实感) / N (直觉)
+        { q: "学习新事物时，你更喜欢：", optA: {text: "学习具体的、有实际应用价值的知识和技能", val: "S"}, optB: {text: "探索抽象的理论、概念和未来的可能性", val: "N"} },
+        { q: "当你被要求描述一件物品时，你更倾向于：", optA: {text: "描述它的颜色、形状、大小等具体特征", val: "S"}, optB: {text: "描述它给你的感觉、象征意义或用途", val: "N"} },
+        { q: "日常生活中，你更信任：", optA: {text: "过去的经验和实实在在的数据", val: "S"}, optB: {text: "突然的灵感和对事物发展趋势的直觉", val: "N"} },
+        { q: "看待复杂问题时，你倾向于关注：", optA: {text: "具体的细节和当下的现实状况", val: "S"}, optB: {text: "全局的蓝图和隐藏在背后的规律", val: "N"} },
+        { q: "在阅读小说或看电影时，你更喜欢：", optA: {text: "情节写实、细节描写丰富的作品", val: "S"}, optB: {text: "充满隐喻、奇幻或科幻色彩的作品", val: "N"} },
+        { q: "你的想法通常是：", optA: {text: "脚踏实地的，喜欢解决眼前的实际问题", val: "S"}, optB: {text: "天马行空的，总是有各种新奇的点子", val: "N"} },
+        { q: "你更欣赏哪种人？", optA: {text: "常识丰富、注重实际且可靠的人", val: "S"}, optB: {text: "富有远见、极具创造力和想象力的人", val: "N"} },
+
+        // T (理智) / F (情感)
+        { q: "在做重要决定时，你主要依赖：", optA: {text: "客观的逻辑分析和事实依据", val: "T"}, optB: {text: "个人的价值观和对他人的感受的影响", val: "F"} },
+        { q: "朋友向你倾诉烦恼时，你的第一反应是：", optA: {text: "帮他分析问题原因，并提供解决方案", val: "T"}, optB: {text: "给予他情感上的安慰和共情", val: "F"} },
+        { q: "你认为在评价一场辩论时，更重要的是：", optA: {text: "论点是否合乎逻辑，论据是否确凿", val: "T"}, optB: {text: "辩手是否具有感染力，是否考虑了人性", val: "F"} },
+        { q: "面对团队冲突，你会倾向于：", optA: {text: "坚持原则，追求公平和真相，即使会得罪人", val: "T"}, optB: {text: "寻求妥协，努力维持团队的和谐与和睦", val: "F"} },
+        { q: "你认为什么样的人更值得称赞？", optA: {text: "极其理智，能保持客观和冷静的人", val: "T"}, optB: {text: "极其善良，充满同情心和温暖的人", val: "F"} },
+        { q: "当你的逻辑与他人的情感发生冲突时，你会：", optA: {text: "坚持逻辑，认为对错最重要", val: "T"}, optB: {text: "照顾情绪，认为人的感受更重要", val: "F"} },
+        { q: "在管理下属或带团队时，你的风格是：", optA: {text: "讲究效率、规则明确、赏罚分明", val: "T"}, optB: {text: "关注下属成长、充满人情味、宽容体谅", val: "F"} },
+
+        // J (判断) / P (感知)
+        { q: "在工作或学习中，你的风格是：", optA: {text: "喜欢提前制定计划并严格按部就班地完成", val: "J"}, optB: {text: "喜欢灵活应变，常常在最后期限前爆发出能量", val: "P"} },
+        { q: "对于旅行，你的安排倾向于：", optA: {text: "提前订好机票酒店，规划好每天的具体行程", val: "J"}, optB: {text: "只定个大方向，到了地方再看心情决定去哪玩", val: "P"} },
+        { q: "你的办公桌面或生活空间通常是：", optA: {text: "井井有条，东西都有固定的放置位置", val: "J"}, optB: {text: "比较随性，虽然有些杂乱但自己能找到东西", val: "P"} },
+        { q: "在面对突发事件改变了你原本的计划时，你会：", optA: {text: "感到焦虑或烦躁，不喜欢计划被打乱", val: "J"}, optB: {text: "感到无所谓甚至兴奋，随遇而安", val: "P"} },
+        { q: "你更倾向于把一件事情：", optA: {text: "尽早做完，享受做完后的轻松感", val: "J"}, optB: {text: "留有余地，直到最后一刻才最终定稿", val: "P"} },
+        { q: "关于做决定，你的态度是：", optA: {text: "倾向于快速做出决定，这样事情就有了定论", val: "J"}, optB: {text: "倾向于暂缓决定，以便收集更多新的信息", val: "P"} },
+        { q: "你更喜欢的生活状态是：", optA: {text: "结构化、有条理的、可预测的", val: "J"}, optB: {text: "开放的、充满弹性的、充满未知的", val: "P"} }
+    ];
+
+    // 打乱题目顺序 (为了测试体验更好，不要让用户一直答同一个维度的题)
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+    shuffleArray(questions);
+
+    // --- 16型人格详细解析库 ---
+    const mbtiProfiles = {
+        "INTJ": {
+            name: "建筑师",
+            desc: "<h3>🧠 核心特质</h3>富有想象力和战略性的思想家。作为极其罕见的人格类型（占人口2%），INTJ拥有独特的知识渴望与强烈的自信。你们是完美主义者，对事物背后的系统和运作逻辑有着极强的洞察力。<br><br><h3>💼 生活与工作表现</h3>在工作中，如果现有的规则或流程没有效率，你会毫不犹豫地打破它并建立新系统。例如，面对一个混乱的项目，你会自发地建立一套完整的追踪架构并要求所有人执行。你们不是在瞎忙，而是在下大棋。<br><br><h3>🌟 职场优势</h3>极其适合独立工作或领导高智商团队。最适合的领域：软件工程师、数据科学家、战略分析师、建筑师或金融架构师。你能看到别人忽视的盲点。<br><br><h3>❤️ 社交与恋爱观</h3>社交对于你们来说往往意味着“无效能量消耗”，你们极少闲聊。在恋爱中，你们在寻找心智上势均力敌的伴侣。你们可能不擅长浪漫和甜言蜜语，但你们极度忠诚，爱一个人就是把对方规划进自己长远的未来里。"
+        },
+        "INTP": {
+            name: "逻辑学家",
+            desc: "<h3>🧠 核心特质</h3>具有创造力的发明家，对知识有着无法熄灭的渴望。INTP 是出色的理论家，你们热爱一切抽象概念。对你们来说，世界是一个由待解谜题组成的巨大游乐场。<br><br><h3>💼 生活与工作表现</h3>你们经常陷入沉思，旁人可能觉得你们在发呆，但其实你们的大脑正在高速运转。在面对复杂难题时，比如修复一个深层Bug或者推导一个物理公式，你们会展现出惊人的专注力和创造性。不过，你们常常“只管挖坑不管埋”，点子想出来了就失去了执行的兴趣。<br><br><h3>🌟 职场优势</h3>你们是出色的系统分析师、数学家、高级程序员和大学教授。任何需要高强度逻辑推演且没有死板规定的工作，都能让你们闪闪发光。<br><br><h3>❤️ 社交与恋爱观</h3>平庸的谈话会让你们想逃跑。你们需要一个能听懂你们脑内风暴的伴侣。面对伴侣的情绪，你们常常试图用“讲逻辑”来解决，这有时会让人觉得不够共情。但你们的爱纯粹且毫无伪装。"
+        },
+        "ENTJ": {
+            name: "指挥官",
+            desc: "<h3>🧠 核心特质</h3>大胆，富有想象力且意志强大的领导者。ENTJ 天生就带有无可挑剔的自信与权威感。你们的字典里没有“做不到”，只有“成本和收益计算”。<br><br><h3>💼 生活与工作表现</h3>你是天生的统帅。在团队失去方向时，你总是那个立刻站出来分配任务、制定KPI并推着所有人前进的人。例如，在一次糟糕的小组讨论中，你通常是那个直接走向白板说：“好，安静，我们现在分三步走…”的人。<br><br><h3>🌟 职场优势</h3>天生的企业家、高管、律师和管理顾问。你们能在复杂的商业环境中敏锐地捕捉到机会，并将长期目标拆解为可执行的无情步骤。<br><br><h3>❤️ 社交与恋爱观</h3>在关系中，你们也会不自觉地带着一种“投资与成长”的心态。你们希望伴侣能和自己一起进步。如果关系出现问题，你会像处理项目危机一样，坐下来列出问题清单并逐一解决。这很硬核，但也无比靠谱。"
+        },
+        "ENTP": {
+            name: "辩论家",
+            desc: "<h3>🧠 核心特质</h3>聪明好奇的思想者，热衷于智力挑战。ENTP 是极致的“魔鬼代言人”。你们喜欢撕碎现有的规则，只是为了看看它们是怎么运作的，以及能不能拼出一个更好玩的版本。<br><br><h3>💼 生活与工作表现</h3>在头脑风暴会议上，你是绝对的主力。如果大家都在赞同一个平庸的方案，你绝对会跳出来提出一个颠覆性的反方观点，并不是因为你讨厌那个方案，只是因为辩论和碰撞能激发你的快感。你永远有Plan B、C、D。<br><br><h3>🌟 职场优势</h3>绝佳的连环创业者、公关专家、创意总监或制片人。你擅长把完全不相干的事物联系在一起。唯一要注意的是：你需要有人帮你把那些天马行空的点子落地落地。<br><br><h3>❤️ 社交与恋爱观</h3>和你们谈恋爱永远不会无聊，因为每一天都在充满智力火花地交流。但你们害怕束缚，不喜欢被传统的恋爱框架绑架。伴侣需要足够独立、足够聪明，能和你互相接梗、互相调侃。"
+        },
+        "INFJ": {
+            name: "提倡者",
+            desc: "<h3>🧠 核心特质</h3>安静而神秘，同时鼓舞人心且不知疲倦的理想主义者。作为最罕见的人格（占1%），INFJ有着极深的内在世界。你们不仅是个“做梦的人”，更是个“为了梦而行动的人”。<br><br><h3>💼 生活与工作表现</h3>你们在人群中往往显得温和内敛，但内心有着极强的道德指南针。在工作中，如果一项任务违背了你的价值观，无论给多少钱你都会抵触。相反，如果是为了一个有意义的事业，你甚至会工作到精疲力尽。你极具洞察力，往往一眼就能看穿别人内心的真实需求。<br><br><h3>🌟 职场优势</h3>极其适合心理咨询师、作家、HR专家、非营利组织领导者。在那些需要深层次理解人性和长远眼光的岗位上，你们是不可替代的灯塔。<br><br><h3>❤️ 社交与恋爱观</h3>你们的社交圈很小，因为你们追求的是“灵魂深处的共鸣”。在恋爱中，你们极度专注且深情。但你们有一项著名的“门被关上”（INFJ Door Slam）技能——当你们受到彻底的背叛或情感耗尽时，你们会毫不留情、永远地把对方从生命中剔除。"
+        },
+        "INFP": {
+            name: "调停者",
+            desc: "<h3>🧠 核心特质</h3>诗意，善良的利他主义者，总是热衷于为正义事业提供帮助。INFP 的内心是一个绚丽的童话世界，你们用滤镜看这个世界，总是能在最糟糕的人和事中寻找那一丝光亮。<br><br><h3>💼 生活与工作表现</h3>你们对强硬的管理、死板的KPI和办公室政治感到窒息。你们渴望工作能表达自我。比如作为一个设计师或内容创作者，你会将自己充沛的情感注入作品中，打动无数人。很多著名的诗人和演员都是INFP。<br><br><h3>🌟 职场优势</h3>作家、平面设计师、插画师、心理辅导员。任何允许你们发挥创造力并能传递善良与美好价值的地方，都是你们的舞台。<br><br><h3>❤️ 社交与恋爱观</h3>你是一个无可救药的浪漫主义者。你一直在等待那个能读懂你心中诗篇的灵魂伴侣。在恋爱中，你倾尽所有地包容对方。但由于你内心的标准太完美，有时在面对现实的鸡毛蒜皮时，你会感到深深的失落。学会和不完美的真实世界和解，是你毕生的课题。"
+        },
+        "ENFJ": {
+            name: "主人公",
+            desc: "<h3>🧠 核心特质</h3>极具魅力和鼓舞人心的领导者，常常令听众着迷。ENFJ 是天生的教育家和启航者。你们有着惊人的共情能力，总是能准确地抓住大众的情绪，并引导大家走向光明。<br><br><h3>💼 生活与工作表现</h3>在团队中，你是绝对的“大家长”。如果有人情绪低落，你第一个发现并递上咖啡。在跨部门沟通这种令人头疼的环节，你能靠着极高的情商，把针锋相对的两拨人哄得开开心心达成共识。你最大的快乐来自于看到别人因为你的帮助而成功。<br><br><h3>🌟 职场优势</h3>天生的教师、公关总监、销售高管、培训师、政客。你能调动任何团队的积极性，让所有人拧成一股绳。<br><br><h3>❤️ 社交与恋爱观</h3>你们的人缘极好，走到哪里都是焦点。在恋爱中，你们全心全意地经营关系，关心伴侣的每一个微小需求。但你需要注意的是：不要因为太过度关注别人的感受，而委屈了自己，忘记了自己的真实需求。"
+        },
+        "ENFP": {
+            name: "竞选者",
+            desc: "<h3>🧠 核心特质</h3>热情，有创造力，爱社交的自由精灵，总能找到理由微笑。ENFP 是名副其实的“人类幼崽”，充满好奇力、永远热血沸腾。你们认为世界是由各种神奇的联系和可能性组成的。<br><br><h3>💼 生活与工作表现</h3>讨厌日常的枯燥重复。如果把你按在工位上天天填Excel，你会枯萎。但如果让你去开拓一个全新的市场、策划一场极具创意的营销活动、或是去和一个陌生的客户破冰，你会展现出惊人的爆发力和感染力。你的热情能瞬间点燃全场。<br><br><h3>🌟 职场优势</h3>记者、活动策划、创意总监、金牌销售。你们在需要创意、人际互动和快速应变的岗位上如鱼得水。<br><br><h3>❤️ 社交与恋爱观</h3>你的微信好友列表总是很长，跟谁都能聊得热火朝天。在感情中，你追求激情、新鲜感和精神的共同成长。你们很怕另一半是个无趣的木头。偶尔你们在感情里显得有些多变，但当你们认准了一个能让你们心智自由飞翔的人，你们会非常深情。"
+        },
+        "ISTJ": {
+            name: "物流师",
+            desc: "<h3>🧠 核心特质</h3>实际且注重事实，可靠性不容怀疑。ISTJ 是这个社会得以稳定运转的基石。你们信奉规则、传统、逻辑和踏实。在你们看来，说到做到是做人的基本底线。<br><br><h3>💼 生活与工作表现</h3>如果交给你一项任务，老板晚上睡觉绝对非常安稳。你会列出清晰的Checklist，不放过任何一个错别字或数据漏洞，并在Deadline前完美交付。你们极度反感那些满嘴跑火车、不按规矩办事的人。在混乱中，你就是那根定海神针。<br><br><h3>🌟 职场优势</h3>审计师、财务总监、系统管理员、法官、高级军官。你们在需要严谨、细致和高度责任感的岗位上是绝对的王者。<br><br><h3>❤️ 社交与恋爱观</h3>你不擅长花言巧语，甚至觉得浪漫的套路很虚伪。但你的爱体现在实实在在的行动上——记住对方的车牌号、修好家里坏掉的电器、每个月按时交好水电费。和你在一起，就是拥有了世界上最安稳的避风港。"
+        },
+        "ISFJ": {
+            name: "守卫者",
+            desc: "<h3>🧠 核心特质</h3>非常专注而温暖的保护者，时刻准备着保卫他们爱的人。ISFJ 是最典型的“利他主义者”。你们温柔、谦逊，但在保护家人或朋友时，却能爆发出惊人的力量。<br><br><h3>💼 生活与工作表现</h3>在公司里，你往往是那个默默记住所有人生日、在有人生病时悄悄递上药片的人。你工作勤奋，从不抢功劳，总是把团队的利益放在个人利益之上。有时候你会因为太不擅长拒绝别人而让自己承担了过量的工作。<br><br><h3>🌟 职场优势</h3>护士、幼教老师、行政主管、客户服务专家。任何需要极高耐心、同理心以及细致执行力的工作，你们都能做到极致完美。<br><br><h3>❤️ 社交与恋爱观</h3>你们极其看重忠诚和承诺。在感情中，你们总是习惯性地照顾对方的饮食起居，甚至把对方宠坏。你需要伴侣能看到你的付出，并给予你明确的感激。一旦认定一个人，你就是那个愿意在风雨中不离不弃的人。"
+        },
+        "ESTJ": {
+            name: "总经理",
+            desc: "<h3>🧠 核心特质</h3>出色的管理者，在管理事物或人的方面无与伦比。ESTJ 尊重传统、秩序和硬性结果。你们不仅自己高效，还能强迫周围的一切变得高效。<br><br><h3>💼 生活与工作表现</h3>你是项目推进的推土机。面对复杂模糊的局面，你能立刻拆解出具体的步骤，并拿着鞭子赶着团队往前走。比如公司要搬家，你会在一天内定好所有的流程、预算和责任人，谁敢掉链子你绝不客气。你相信“数据和结果不会撒谎”。<br><br><h3>🌟 职场优势</h3>高级项目经理、厂长、警官、企业高管。在需要建立秩序、大规模调度资源和严抓执行力的领域，你是无人能及的狠角色。<br><br><h3>❤️ 社交与恋爱观</h3>你们在恋爱中也喜欢当“主导者”。你们喜欢计划好周末的行程、管理家庭的财务。你们不擅长处理伴侣细腻复杂的小情绪，当你看到伴侣哭泣时，第一反应往往是“告诉我谁欺负你了，我去解决他”，而不是单纯的拥抱。你们的爱是极具保护欲的。"
+        },
+        "ESFJ": {
+            name: "执政官",
+            desc: "<h3>🧠 核心特质</h3>极度体贴，喜爱交际，受欢迎，总是热心提供帮助。ESFJ 就像是永远散发着热量的小太阳。你们极度看重和谐的人际关系，并且愿意为了维系这种和谐付出巨大的努力。<br><br><h3>💼 生活与工作表现</h3>你是公司里的“大管家”和“破冰者”。公司年会或团建如果没有你，绝对会变得干瘪无聊。你对别人的需求有着极度敏锐的嗅觉，总是能在第一时间提供帮助。你极度渴望获得外界的肯定和赞美，一句“谢谢你”就能让你充满动力。<br><br><h3>🌟 职场优势</h3>公关经理、婚礼策划师、医疗管理、社工。你们能在任何需要大量人际交互、组织和协调的岗位上创造出惊人的团队凝聚力。<br><br><h3>❤️ 社交与恋爱观</h3>你希望你的伴侣能和你一样热衷于社交，喜欢参加朋友的聚会。在恋爱中，你渴望世俗认同的稳定和浪漫（比如纪念日的鲜花、大家眼中的模范情侣）。你对伴侣极尽关怀，但也容易因为对方不够回应你的热情而感到受伤。"
+        },
+        "ISTP": {
+            name: "鉴赏家",
+            desc: "<h3>🧠 核心特质</h3>大胆而实际的实验家，擅长使用任何形式的工具。ISTP 是天生的“手艺人”。你们用双手和眼睛来探索世界，逻辑严密，冷静且极具好奇心。<br><br><h3>💼 生活与工作表现</h3>你们非常佛系，不喜欢被死板的规则束缚。但在面对突发的高压危机时（比如服务器崩溃、赛车引擎故障），你会比任何人都冷静，能够立刻上手拆解问题并找到极其高效的物理/逻辑解决方案。你们学东西是通过“拆开再装上”来实现的。<br><br><h3>🌟 职场优势</h3>机械工程师、程序员、飞行员、急救医生。只要让你们动手、动脑且不需要整天开无效的会，你们就能产出最高质量的工作。<br><br><h3>❤️ 社交与恋爱观</h3>你们极其需要私人空间。在感情中，你不喜欢太过黏腻或情绪化。你更喜欢和伴侣一起去做一些具体的事——比如一起骑行、滑雪、打游戏，而不是整晚坐在沙发上剖析内心世界。和你们相处非常轻松，因为你们不记仇、不作作。"
+        },
+        "ISFP": {
+            name: "探险家",
+            desc: "<h3>🧠 核心特质</h3>灵活而有魅力的艺术家，时刻准备着探索和体验新鲜事物。ISFP 活在当下，你们对色彩、声音、味道有着远超常人的敏锐感知力。你们是真正懂得如何“生活”的人。<br><br><h3>💼 生活与工作表现</h3>你不喜欢竞争，也不渴望成为领导。你只希望在一个舒适的环境里，按自己的节奏做自己喜欢的事。你可能有非常高超的审美天赋。当别人在为升职加薪焦虑时，你可能更在意今天下午咖啡馆的阳光好不好。这种松弛感是你们最迷人的特质。<br><br><h3>🌟 职场优势</h3>设计师、摄影师、音乐家、美容/时尚专家。在不需要高度组织化、允许自由发挥审美与感官天赋的地方，你们是天生的艺术家。<br><br><h3>❤️ 社交与恋爱观</h3>你们内心细腻敏感，但不喜欢张扬。在恋爱中，你充满柔情，喜欢用一些特别的、充满美感的小惊喜来表达爱意（比如亲手做的一顿精美晚餐、一张拍立得照片）。你极度反感控制欲强的伴侣，你需要像风一样自由地呼吸。"
+        },
+        "ESTP": {
+            name: "企业家",
+            desc: "<h3>🧠 核心特质</h3>聪明，精力充沛，非常敏锐，真正享受生活在边缘的人。ESTP 是追求刺激的行动派。你们的格言是“别废话了，干就完了”。<br><br><h3>💼 生活与工作表现</h3>你们是天生的救火队员和谈判专家。在枯燥的理论课堂上你们会睡着，但在瞬息万变的商业谈判桌上你们却精神百倍。你们非常善于察言观色，能瞬间捕捉到对方的微表情并调整策略。你们愿意为了高回报承担高风险，规则对你们来说就是用来绕过的。<br><br><h3>🌟 职场优势</h3>销售冠军、危机公关、投资客、体育经纪人。任何节奏极快、充满变数、结果导向的战场，都是你们的主场。<br><br><h3>❤️ 社交与恋爱观</h3>你是人群中的明星，充满幽默感和性魅力。你喜欢带伴侣去体验最好的餐厅、最刺激的极限运动。但由于你太关注当下的快乐，有时会忽视长期承诺的经营。如果要让你长久停留，伴侣必须能跟上你飞快的步伐和永不枯竭的精力。"
+        },
+        "ESFP": {
+            name: "表演者",
+            desc: "<h3>🧠 核心特质</h3>自发，精力充沛而热情的艺人——生活在他们周围永不无聊。ESFP 是把每一天都当成舞台的精灵。你们热爱生活的一切：好吃的、好玩的、好看的衣服，以及快乐的人们。<br><br><h3>💼 生活与工作表现</h3>只要有你在的地方，绝对不会冷场。你极度讨厌孤独和严肃。在工作中，你的感染力往往能化解最僵硬的客户关系。不过，你们也容易三分钟热度，对于那些需要深度分析、长期规划、或者死磕细节的任务，你会感到痛苦万分。<br><br><h3>🌟 职场优势</h3>演员、活动策划、导游、公关、时尚买手。任何能让你处在聚光灯下、和人打交道、并能发挥你时尚品味的工作，都是完美的。<br><br><h3>❤️ 社交与恋爱观</h3>你们的爱如同夏日的烈阳，热烈、直接、充满欢乐。你享受被爱的感觉，也毫不吝啬地把爱大声说出来。你不喜欢猜忌和复杂的内心戏。惹你生气了，也许一顿好吃的、一场电影就能把你哄好。你是最好的玩伴和最快乐的爱人。"
+        }
+    };
+
+    // --- 应用逻辑 ---
+    let currentQuestionIndex = 0;
+    const scores = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+
+    const welcomeView = document.getElementById('welcomeView');
+    const quizView = document.getElementById('quizView');
+    const loadingView = document.getElementById('loadingView');
+    const resultView = document.getElementById('resultView');
+    
+    const questionMeta = document.getElementById('questionMeta');
+    const questionText = document.getElementById('questionText');
+    const optionsContainer = document.getElementById('optionsContainer');
+    const progressFill = document.getElementById('progressFill');
+
+    function startQuiz() {
+        welcomeView.classList.remove('active');
+        quizView.classList.add('active');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const q = questions[currentQuestionIndex];
+        questionMeta.innerText = `进度: ${currentQuestionIndex + 1} / ${questions.length}`;
+        questionText.innerText = q.q;
+        
+        const progressPercent = ((currentQuestionIndex) / questions.length) * 100;
+        progressFill.style.width = `${progressPercent}%`;
+
+        // 随机打乱选项A和B的位置
+        const opts = [q.optA, q.optB];
+        if (Math.random() > 0.5) opts.reverse();
+
+        optionsContainer.innerHTML = '';
+        opts.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt.text;
+            btn.onclick = () => selectOption(opt.val);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function selectOption(value) {
+        scores[value]++;
+        currentQuestionIndex++;
+
+        if (currentQuestionIndex < questions.length) {
+            loadQuestion();
+        } else {
+            progressFill.style.width = `100%`;
+            showLoading();
+        }
+    }
+
+    function showLoading() {
+        quizView.classList.remove('active');
+        loadingView.classList.add('active');
+        
+        // 模拟分析数据的延迟动画
+        setTimeout(() => {
+            calculateAndShowResult();
+        }, 2000);
+    }
+
+    function calculateAndShowResult() {
+        const type = [
+            scores.E > scores.I ? 'E' : 'I',
+            scores.S > scores.N ? 'S' : 'N',
+            scores.T > scores.F ? 'T' : 'F',
+            scores.J > scores.P ? 'J' : 'P'
+        ].join('');
+
+        loadingView.classList.remove('active');
+        resultView.classList.add('active');
+
+        document.getElementById('resultType').innerText = type;
+        const profile = mbtiProfiles[type];
+        
+        if(profile) {
+            document.getElementById('resultName').innerText = profile.name;
+            document.getElementById('resultContent').innerHTML = profile.desc;
+        } else {
+            document.getElementById('resultName').innerText = "未知类型";
+            document.getElementById('resultContent').innerHTML = "出错了，无法分析您的性格。";
+        }
+    }
+</script>
+
+</body>
+</html>
