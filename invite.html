@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>叮咚！收到一封邀请</title>
+    <style>
+        :root {
+            --primary: #ff4d79;
+            --bg-top: #ff9a9e;
+            --bg-bottom: #fecfef;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* 防止按钮跑出屏幕导致滚动条 */
+            position: relative;
+        }
+
+        /* 满屏爱心画布 */
+        #confetti {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            display: none;
+        }
+
+        /* 中心卡片 */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(255, 77, 121, 0.2);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            z-index: 10;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .icon {
+            font-size: 60px;
+            margin-bottom: 10px;
+            display: inline-block;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        h1 {
+            color: #333;
+            font-size: 22px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        p.sub-text {
+            color: #777;
+            font-size: 15px;
+            margin-bottom: 30px;
+        }
+
+        /* 按钮容器 */
+        .buttons {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            min-height: 50px;
+        }
+
+        button {
+            border: none;
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+
+        /* 接受按钮 */
+        .btn-yes {
+            background: linear-gradient(to right, #ff4d79, #ff7eb3);
+            color: white;
+            box-shadow: 0 8px 15px rgba(255, 77, 121, 0.3);
+            flex: 1;
+            animation: pulse 1.5s infinite;
+        }
+
+        .btn-yes:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 77, 121, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 77, 121, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 77, 121, 0); }
+        }
+
+        /* 拒绝按钮（恶作剧核心） */
+        .btn-no {
+            background: #f0f0f0;
+            color: #666;
+            flex: 1;
+            /* 当它移动时，必须有 transition 显得丝滑 */
+            transition: left 0.3s ease, top 0.3s ease; 
+        }
+
+        /* 气泡提示 */
+        .bubble {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 50;
+            animation: bubbleUp 1.5s forwards;
+            white-space: nowrap;
+        }
+
+        @keyframes bubbleUp {
+            0% { opacity: 0; transform: translate(-50%, 20px) scale(0.8); }
+            20% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+            80% { opacity: 1; transform: translate(-50%, -20px) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -40px) scale(0.8); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti"></canvas>
+
+    <div class="card" id="mainCard">
+        <div class="icon" id="cardIcon">💌</div>
+        <h1 id="cardTitle">叮咚！<br>Stephanie Dou! 向你发出亲密邀请</h1>
+        <p class="sub-text" id="cardSub">你愿意接受吗？</p>
+        
+        <div class="buttons" id="btnContainer">
+            <button class="btn-yes" onclick="acceptInvitation()">接受</button>
+            <button class="btn-no" id="btnNo">拒绝</button>
+        </div>
+    </div>
+
+    <script>
+        const btnNo = document.getElementById('btnNo');
+        let isFirstHover = true;
+
+        // 10条搞笑逃跑台词
+        const jokes = [
+            "你真的要拒绝吗？🥺",
+            "再想想嘛，别急着点呀~",
+            "哎呀，点不到我吧，嘿嘿😜",
+            "你的良心不会痛吗！",
+            "手速太慢啦，单身20年的手速呢？",
+            "拒绝无效，本按钮已叛逃！",
+            "难道我不够可爱吗？",
+            "警告：继续尝试将没收手机！",
+            "放弃吧，这就是宿命~",
+            "连个按钮都抓不住，还想跑？"
+        ];
+
+        // 移动拒绝按钮
+        function moveNoButton(e) {
+            // 防止在手机端真正触发点击事件
+            if (e.type === 'touchstart') {
+                e.preventDefault(); 
+            }
+
+            // 第一次碰到时，将按钮从文档流里剥离，变成 fixed 绝对定位
+            if (isFirstHover) {
+                const rect = btnNo.getBoundingClientRect();
+                btnNo.style.position = 'fixed';
+                btnNo.style.width = rect.width + 'px';
+                btnNo.style.height = rect.height + 'px';
+                isFirstHover = false;
+            }
+
+            // 计算屏幕的可移动范围 (减去按钮自身的宽高，防止跑出屏幕)
+            const maxX = window.innerWidth - btnNo.offsetWidth - 20;
+            const maxY = window.innerHeight - btnNo.offsetHeight - 20;
+
+            // 生成随机坐标
+            const randomX = Math.max(20, Math.floor(Math.random() * maxX));
+            const randomY = Math.max(20, Math.floor(Math.random() * maxY));
+
+            // 移动按钮
+            btnNo.style.left = randomX + 'px';
+            btnNo.style.top = randomY + 'px';
+
+            // 弹出搞笑气泡
+            showBubble(randomX + btnNo.offsetWidth / 2, randomY);
+        }
+
+        // 显示弹幕气泡
+        function showBubble(x, y) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            // 随机选一句台词
+            bubble.innerText = jokes[Math.floor(Math.random() * jokes.length)];
+            
+            // 放在按钮的上方
+            bubble.style.left = x + 'px';
+            bubble.style.top = (y - 10) + 'px';
+            
+            document.body.appendChild(bubble);
+
+            // 1.5秒后动画结束，清理 DOM
+            setTimeout(() => {
+                bubble.remove();
+            }, 1500);
+        }
+
+        // 绑定事件：PC端鼠标悬停，移动端手指触摸
+        btnNo.addEventListener('mouseover', moveNoButton);
+        btnNo.addEventListener('touchstart', moveNoButton, {passive: false});
+
+        // 接受邀请逻辑
+        function acceptInvitation() {
+            // 修改卡片内容
+            document.getElementById('cardIcon').innerText = '🎉';
+            document.getElementById('cardTitle').innerHTML = '太棒啦！<br>对方已收到你的接受';
+            document.getElementById('cardSub').innerText = '并向你发射了一个飞吻 😘';
+            
+            // 隐藏按钮区域
+            document.getElementById('btnContainer').style.display = 'none';
+
+            // 卡片放大动画
+            document.getElementById('mainCard').style.transform = 'scale(1.05)';
+
+            // 启动满屏爱心特效
+            startConfetti();
+        }
+
+        // --- 满屏爱心粒子特效引擎 ---
+        function startConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.style.display = 'block';
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const particleCount = 100;
+
+            // 初始化粒子
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height, // 从屏幕上方掉落
+                    size: Math.random() * 20 + 10, // 大小 10~30
+                    speedY: Math.random() * 3 + 2, // 下落速度
+                    speedX: Math.random() * 2 - 1, // 左右摇摆
+                    rotation: Math.random() * 360,
+                    rotationSpeed: Math.random() * 5 - 2.5
+                });
+            }
+
+            // 动画循环
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                particles.forEach(p => {
+                    p.y += p.speedY;
+                    p.x += p.speedX;
+                    p.rotation += p.rotationSpeed;
+
+                    // 重置掉出屏幕的爱心
+                    if (p.y > canvas.height) {
+                        p.y = -30;
+                        p.x = Math.random() * canvas.width;
+                    }
+
+                    // 绘制爱心文字
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation * Math.PI / 180);
+                    ctx.font = `${p.size}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('❤️', 0, 0);
+                    ctx.restore();
+                });
+
+                requestAnimationFrame(render);
+            }
+            render();
+
+            // 窗口改变时调整画布大小
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        }
+    </script>
+</body>
+</html>
